@@ -4,6 +4,7 @@ import json
 import requests
 import urllib3
 from bs4 import BeautifulSoup
+from yt_dlp.extractor.zingmp3 import ZingMp3WeekChartIE
 
 from config import get_headers, MAIN_URL
 from database_worker import write_information_to_database
@@ -33,7 +34,7 @@ async def parse_book_data(url: str, book_data: dict, db_key: str) -> None:
             # начинаем парсить кнопки номеров
             # создаем список в котором лежат все html элементы subtitile и razdel (заголовки и блоки с кнопками)
             filtered_numbers_article_html_children = list(
-                filter(lambda el: numbers_elements_checker(el, ['subtitle'], ['razdel']), numbers_article.children)
+                filter(lambda el: numbers_elements_checker(el, ['subtitle'], ['razdel'], ['short', 'razdel']), numbers_article.children)
             )
             if len(filtered_numbers_article_html_children) > 0:
                 # если в списке есть элементы, то формируем словарь данных номеров
@@ -59,7 +60,7 @@ async def parse_book_data(url: str, book_data: dict, db_key: str) -> None:
             print(f'Ошибка {r.status_code}! Пытаюсь еще раз {url}')
             await asyncio.sleep(0.3)
             await parse_book_data(url, book_data, db_key)
-    except Exception as e:
+    except ZeroDivisionError as e:
         print(f'Ошибка парсинга: {e} {url}')
         await asyncio.sleep(0.3)
         await parse_book_data(url, book_data, db_key)
@@ -70,7 +71,7 @@ if __name__ == '__main__':
     start_time = time.time()
     asyncio.run(
         parse_book_data(
-            'https://reshak.ru/reshebniki/algebra/9/kolyagin/index.html',
+            'https://reshak.ru/reshebniki/informatika/9/bosova_uchebnik/index.html',
             {}, 'book_data')
     )
     print(f'Time: {time.time() - start_time}')

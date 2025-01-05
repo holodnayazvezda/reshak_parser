@@ -8,6 +8,7 @@ from bs4 import BeautifulSoup
 from async_thread_runner import start
 from book_numbers import parse_book_data
 from config import get_headers, MAIN_URL
+from cropper import crop_callback_data_string
 from database_worker import write_information_to_database
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -30,6 +31,11 @@ async def parse_authors_and_books(url: str, db_key: str) -> None:
                 book_year_div = book_a.find('div', class_='bookYear')
                 if book_year_div is not None:
                     book_year = book_year_div.text.strip()
+                # проверить, есть ли у книги дополнительное имя
+                book_dop_name = ''
+                book_dop_name_p = book_a.find('p', class_='dopName')
+                if book_dop_name_p is not None:
+                    book_dop_name = book_dop_name_p.text.strip()
                 # получить ссылку на учебник
                 link = MAIN_URL + book_a['href']
                 # получить авторов учебника
@@ -40,14 +46,20 @@ async def parse_authors_and_books(url: str, db_key: str) -> None:
                 book_name = book_a.get('alt')
                 book_name_cropped = book_name.replace('ГДЗ ', '')
                 book_full_name = f'{book_name_cropped} {book_year}'.strip()
+                cropped_book_full_name = crop_callback_data_string(book_full_name)
                 # создать новый db_key для таблицы books
                 new_db_key = f'{db_key}-{book_leading_author}'
                 if book_leading_author in dict_of_authors_and_books:
-                    dict_of_authors_and_books[book_leading_author].append(book_full_name)  # добавить книгу в словарь
+                    if cropped_book_full_name in dict_of_authors_and_books[book_leading_author]:
+                        if sorted(dict_of_authors_and_books[book_leading_author])[-1].split('-')[-1].isdigit():
+                            cropped_book_full_name = f'{cropped_book_full_name}-{str(int(sorted(dict_of_authors_and_books[book_leading_author])[-1].split('-')[-1]) + 1)}'
+                        else:
+                            cropped_book_full_name = f'{cropped_book_full_name}-1'
+                    dict_of_authors_and_books[book_leading_author].append(cropped_book_full_name)  # добавить книгу в словарь
                 else:
-                    dict_of_authors_and_books[book_leading_author] = [book_full_name]  # создать новый ключ в словаре
+                    dict_of_authors_and_books[book_leading_author] = [cropped_book_full_name]  # создать новый ключ в словаре
                     await write_information_to_database('gdz.sqlite3', 'authors', book_leading_author, db_key)
-                await write_information_to_database('gdz.sqlite3', 'books', book_full_name, new_db_key)
+                await write_information_to_database('gdz.sqlite3', 'books', cropped_book_full_name, new_db_key)
                 # начинаем формировать словарь данных книги, до конца он будет сформирован в book_numbers.py #
                 book_data = {
                     'name': book_full_name,
@@ -65,4 +77,4 @@ async def parse_authors_and_books(url: str, db_key: str) -> None:
 
 
 if __name__ == '__main__':
-    asyncio.run(parse_authors_and_books('https://reshak.ru/tag/9klass_alg.html', ''))
+    asyncio.run(parse_authors_and_books('https://reshak.ru/tag/9klass_him.html', ''))

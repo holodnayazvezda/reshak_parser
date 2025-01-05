@@ -81,4 +81,8 @@ async def parse_gdz_dict(filtered_html_children: list, subtitle_class: str, db_k
                 else:
                     # или, если у нас только одна кнопка, то сразу добавляем ее к общему словарю
                     gdz.update(grouped_numbers)
-    return gdz
+    filtered_gdz = {}
+    for key in gdz:
+        if gdz[key]: filtered_gdz[key] = gdz[key]
+    return filtered_gdz
+
