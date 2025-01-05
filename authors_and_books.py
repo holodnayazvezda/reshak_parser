@@ -67,7 +67,7 @@ async def parse_authors_and_books(url: str, db_key: str) -> None:
                     'name': book_full_name,
                     'authors': authors_string
                 }
-                # Thread(target=start, args=(parse_book_data, [link, book_data, f'{new_db_key}-{book_full_name}'])).start()
+                Thread(target=start, args=(parse_book_data, [link, book_data, f'{new_db_key}-{book_full_name}'])).start()
         elif r.status_code != 404:
             print(f'Ошибка {r.status_code}! Пытаюсь еще раз {url}')
             await asyncio.sleep(0.3)
