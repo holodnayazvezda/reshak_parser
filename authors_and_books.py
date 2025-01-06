@@ -45,18 +45,18 @@ async def parse_authors_and_books(url: str, db_key: str) -> None:
                 # получить название учебника
                 book_name = book_a.get('alt')
                 book_name_cropped = book_name.replace('ГДЗ ', '')
-                book_full_name = f'{book_name_cropped} {book_dop_name} {book_year}'.strip()
+                book_full_name = f'{book_name_cropped} {book_dop_name} {book_year}'.strip().replace("  ", " ")
                 cropped_book_full_name = crop_callback_data_string(book_full_name)
                 # создать новый db_key для таблицы books
-                new_db_key = f'{db_key}-{book_leading_author}'
+                new_db_key = f'{db_key}|{book_leading_author}'
                 if book_leading_author in dict_of_authors_and_books:
                     if cropped_book_full_name in dict_of_authors_and_books[book_leading_author]:
                         lst_to_work = sorted(list(filter(lambda el:  book_full_name in el, dict_of_authors_and_books[book_leading_author])))
-                        if lst_to_work and lst_to_work[-1].split('-')[-1].isdigit():
-                            num = str(int(sorted(dict_of_authors_and_books[book_leading_author])[-1].split('-')[-1]) + 1)
-                            cropped_book_full_name = f'{cropped_book_full_name}-{num}'
+                        if lst_to_work and lst_to_work[-1].split('№')[-1].isdigit():
+                            num = str(int(sorted(dict_of_authors_and_books[book_leading_author])[-1].split('№')[-1]) + 1)
+                            cropped_book_full_name = f'{cropped_book_full_name} №{num}'
                         else:
-                            cropped_book_full_name = f'{cropped_book_full_name}-1'
+                            cropped_book_full_name = f'{cropped_book_full_name} №1'
                     dict_of_authors_and_books[book_leading_author].append(cropped_book_full_name)  # добавить книгу в словарь
                 else:
                     dict_of_authors_and_books[book_leading_author] = [cropped_book_full_name]  # создать новый ключ в словаре
@@ -67,7 +67,7 @@ async def parse_authors_and_books(url: str, db_key: str) -> None:
                     'name': book_full_name,
                     'authors': authors_string
                 }
-                Thread(target=start, args=(parse_book_data, [link, book_data, f'{new_db_key}-{cropped_book_full_name}'])).start()
+                Thread(target=start, args=(parse_book_data, [link, book_data, f'{new_db_key}|{cropped_book_full_name}'])).start()
         elif r.status_code != 404:
             print(f'Ошибка {r.status_code}! Пытаюсь еще раз {url}')
             await asyncio.sleep(0.3)

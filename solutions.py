@@ -17,9 +17,10 @@ async def parse_solutions(url: str, db_key: str):
         if r.status_code == 200:
             soup = BeautifulSoup(r.text, 'html.parser')
             solution_article = soup.find('article', class_='lcol')
-            is_image_in_solution = soup.find('div', class_='pic_otvet1') is not None
-            if is_image_in_solution:
-                images = solution_article.find_all('img')
+            divs_with_classes = list(filter(lambda el: el.attrs.get('class'), solution_article.find_all('div')))
+            images_blocks_in_solution = list(filter(lambda el: 'pic_otvet1' in el.attrs.get('class')[0], divs_with_classes))
+            if images_blocks_in_solution:
+                images = list(map(lambda el: el.find('img'), images_blocks_in_solution))
                 solution_images_links = []
                 for image in images:
                     image_link = image.get('src')
@@ -29,8 +30,6 @@ async def parse_solutions(url: str, db_key: str):
                             image_link = image.get('data-src')
                     if image_link != '/pic/zapret_pravo.png':
                         solution_images_links.append(MAIN_URL + image_link)
-                amount_of_solutions = solution_article.find_all('h2', class_='titleh2')
-                solution_images_links = solution_images_links[:len(amount_of_solutions)]
                 solution_data = {
                     'url': url,
                     'type': 'img',
@@ -45,7 +44,7 @@ async def parse_solutions(url: str, db_key: str):
                         'type': 'text',
                         'text': solution_text
                     }
-                except Exception as e:
+                except Exception:
                     solution_data = {
                         'url': url,
                         'type': 'url'
@@ -64,6 +63,6 @@ async def parse_solutions(url: str, db_key: str):
 if __name__ == '__main__':
     import time
     start_time = time.time()
-    asyncio.run(parse_solutions('https://reshak.ru/otvet/reshebniki.php?otvet=pract3&predmet=bogolubov9', db_key=''))
+    asyncio.run(parse_solutions('https://reshak.ru/otvet/otvet_txt.php?otvet1=/spotlight9/images/module2/c/2', db_key=''))
     print(f'Time: {time.time() - start_time}')
     

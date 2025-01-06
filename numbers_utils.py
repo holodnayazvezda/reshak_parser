@@ -22,7 +22,7 @@ async def parse_numbers_data(number_a_elements: list, db_key: str) -> dict:
         number_link = numbers_a_element.get('href')
         if number_link is not None:
             number_absolute_link = MAIN_URL + number_link
-            unique_db_key = db_key + '-' + dt.now().strftime("%Y%m%d%H%M%S%f")
+            unique_db_key = db_key + '|' + dt.now().strftime("%Y%m%d%H%M%S%f")
             numbers_data[numbers_a_element.text.strip()] = unique_db_key
             await parse_solutions(number_absolute_link, unique_db_key)
     return numbers_data

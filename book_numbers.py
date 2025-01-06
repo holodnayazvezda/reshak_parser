@@ -48,7 +48,7 @@ async def parse_book_data(url: str, book_data: dict, db_key: str) -> None:
                 for title, block in zip(numbers_blocks_titles, numbers_blocks_divs):
                     title_text = title.text.strip()
                     filtered_block_html_children = list(
-                        filter(lambda el: numbers_elements_checker(el, ['partName'], ['partContent']), block.children)
+                        filter(lambda el: numbers_elements_checker(el, ['partName'], ['partContent'], ['razdel']), block.children)
                     )
                     # на основании новых полученных элементов формируем словарь данных для одного вложенного блока
                     block_gdz = await parse_gdz_dict(filtered_block_html_children, 'partName', db_key)
@@ -71,7 +71,7 @@ if __name__ == '__main__':
     start_time = time.time()
     asyncio.run(
         parse_book_data(
-            'https://reshak.ru/reshebniki/informatika/9/bosova_uchebnik/index.html',
+            'https://reshak.ru/enjoy4/index.html',
             {}, 'book_data')
     )
     print(f'Time: {time.time() - start_time}')

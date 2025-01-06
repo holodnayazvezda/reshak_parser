@@ -35,7 +35,7 @@ async def parse_classes_and_subjects() -> None:
                     # получаем название предмета и ссылку на предмет
                     class_subject_name = class_subject_a.text.strip()
                     class_subject_url = MAIN_URL + class_subject_a.get('href').strip()
-                    await parse_authors_and_books(class_subject_url, f'{class_name}-{class_subject_name}')
+                    await parse_authors_and_books(class_subject_url, f'{class_name}|{class_subject_name}')
                     await write_information_to_database('gdz.sqlite3', 'subjects', class_subject_name, class_name)
         else:
             print('Ошибка! Не удалось спарсить классы!')
